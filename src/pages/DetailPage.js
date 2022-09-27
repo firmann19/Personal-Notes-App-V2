@@ -1,35 +1,23 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import NoteDetail from "../components/NoteDetail";
 import { getNote } from "../utils/api";
+//import { showFormattedDate } from "../utils/api";
 
-function DetailPageWrapper() {
+const DetailNote = () => {
   const { id } = useParams();
-  return <DetailPage id={id} />;
-}
+  const note = getNote(id);
 
-class DetailPage extends React.Component {
-  constructor(props) {
-    super(props);
+  return (
+    <div className="note-app__main">
+      <div className="note-app__detail-note">
+        <h1 className="note-app__detail-note_title">{note.title}</h1>
+        <p className="note-app__detail-note_date">
+          {note.createdAt}
+        </p>
+        <p className="note-app__detail-note_body">{note.body}</p>
+      </div>
+    </div>
+  );
+};
 
-    const {data} = getNote(props.id)
-
-    this.state = {
-      notes: data,
-    };
-  }
-
-  render() {
-    if (this.state.notes === null) {
-      return <p className="note-detail__empty">Catatan Tidak Ditemukan</p>;
-    }
-
-    return (
-      <section>
-        <NoteDetail {...this.state.notes} />
-      </section>
-    );
-  }
-}
-
-export default DetailPageWrapper;
+export default DetailNote;

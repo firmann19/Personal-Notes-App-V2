@@ -2,105 +2,47 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 import NoteList from "../components/NoteList";
 import SearchBar from "../components/SearchBar";
-import { LocaleConsumer } from "../context/LocaleContext";
+import LocaleContext from "../context/LocaleContext";
 import { deleteNote, getActiveNotes } from "../utils/api";
 
-// function HomePage() {
-//   const [searchParams, setSearchParams] = useSearchParams();
-//   const [contacts, setContacts] = React.useState([]);
-//   const [keyword, setKeyword] = React.useState(() => {
-//     return searchParams.get('keyword') || ''
-//   });
-//   const {locale} = React.useContext(LocaleContext)
-
-//   return (
-//     <div>HomePage</div>
-//   )
-// }
-
-// export default HomePage
-
-function HomePageWrapper() {
+function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [notes, setNotes] = React.useState([]);
+  const [keyword, setKeyword] = React.useState(() => {
+    return searchParams.get("keyword") || "";
+  });
+  const { locale } = React.useContext(LocaleContext);
 
-  const keyword = searchParams.get("keyword");
+  React.useEffect(() => {
+    getActiveNotes().then(({ data }) => {
+      setNotes(data);
+    });
+  }, []);
 
-  function changeSearchParams(keyword) {
+  async function onDeleteHandler(id) {
+    await deleteNote(id);
+    // update the contacts state from network.js
+    const { data } = await getActiveNotes();
+    setNotes(data);
+  }
+  function onKeywordChangeHandler(keyword) {
+    setKeyword(keyword);
     setSearchParams({ keyword });
   }
+
+  const filteredNotes = notes.filter((note) => {
+    return note.title.toLowerCase().includes(keyword.toLowerCase());
+  });
+
   return (
-    <HomePage defaultKeyword={keyword} keywordChange={changeSearchParams} />
+    <main>
+      <SearchBar keyword={keyword} keywordChange={onKeywordChangeHandler} />
+      <br />
+      <h2>{locale === "id" ? "Daftar Catatan" : "Notes List"}</h2>
+      <NoteList notes={filteredNotes} onDelete={onDeleteHandler} />
+    </main>
   );
 }
 
-class HomePage extends React.Component {
-  constructor(props) {
-    super(props);
+export default HomePage;
 
-    this.state = {
-      notes: [],
-      keyword: props.defaultKeyword || "",
-    };
-    this.onDeleteHandler = this.onDeleteHandler.bind(this);
-    this.onKeywordChangeHandler = this.onKeywordChangeHandler.bind(this);
-  }
-
-  async componentDidMount() {
-    const { data } = await getActiveNotes();
-
-    this.setState(() => {
-      return {
-        notes: data,
-      };
-    });
-  }
-
-  async onDeleteHandler(id) {
-    await deleteNote(id);
-
-    const { data } = await getActiveNotes();
-
-    this.setState(() => {
-      return {
-        notes: data,
-      };
-    });
-  }
-
-  onKeywordChangeHandler(keyword) {
-    this.setState(() => {
-      return {
-        keyword,
-      };
-    });
-    this.props.keywordChange(keyword);
-  }
-
-  render() {
-    const notes = this.state.notes.filter((note) => {
-      return note.title
-        .toLowerCase()
-        .includes(this.state.keyword.toLowerCase());
-    });
-
-    return (
-      <LocaleConsumer>
-        {({ locale }) => {
-          return (
-            <main>
-              <SearchBar
-                keyword={this.state.keyword}
-                keywordChange={this.onKeywordChangeHandler}
-              />
-              <br />
-              <h2>{locale === "id" ? "Daftar Catatan" : "Notes List"}</h2>
-              <NoteList notes={notes} onDelete={this.onDeleteHandler} />
-            </main>
-          );
-        }}
-      </LocaleConsumer>
-    );
-  }
-}
-
-export default HomePageWrapper;

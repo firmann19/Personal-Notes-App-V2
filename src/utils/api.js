@@ -160,6 +160,7 @@ async function deleteNote(id) {
   return { error: false, data: responseJson.data };
 }
 
+
 export {
   getAccessToken,
   putAccessToken,
